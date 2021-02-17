@@ -1,4 +1,4 @@
-from Players import HumanPlayerR, HumanPlayerB
+from Players import HumanPlayer
 
 class ConnectFour:
     def __init__(self) -> None:
@@ -26,6 +26,12 @@ class ConnectFour:
                 result.append(i)
             i += 1
         return result
+
+    def hasMoves(self) -> bool:
+        for col in self.board:
+            if ' ' in col:
+                return True
+        return False
     
     def hasWinner(self) -> bool:
         return False if self.current_winner == None else True
@@ -49,33 +55,29 @@ class ConnectFour:
                                 break
                             print(cycle)
                             if cycle == 2:
+                                self.current_winner = player.getMarker()
                                 return True
         return False
 
-def playGame():
-    c = ConnectFour()
-    player = HumanPlayerR()
-    while not c.hasWinner:
-        return None
+def playGame(game, rPlayer, bPlayer) -> None:
+    game.printBoard()
+    activePlayer = rPlayer
+
+    while not game.hasWinner() and game.hasMoves():
+        move = activePlayer.getMove(game)
+        game.makeMove(move, activePlayer)
+        game.printBoard()
+        activePlayer = rPlayer if activePlayer.getMarker() == "B" else bPlayer
+    
+    if game.hasWinner:
+        print(activePlayer.getMarker() + " wins!")
+    else:
+        print("It's a tie")
 
 
 if __name__ == "__main__":
     c = ConnectFour()
-    c.printBoard()
+    r = HumanPlayer("R")
+    b = HumanPlayer("B")
     print(c.availableMoves())
-
-    me = HumanPlayerR()
-    other = HumanPlayerB()
-    c.makeMove(1, me)
-    c.makeMove(2, other)
-    c.makeMove(2, me)
-    c.makeMove(3, other)
-    c.makeMove(3, other)
-    c.makeMove(3, me)
-    c.makeMove(4, other)
-    c.makeMove(4, other)
-    c.makeMove(4, other)
-    c.makeMove(4, me)
-    
-    c.printBoard()
-    print(c.wonGame(me))
+    playGame(c, r, b)

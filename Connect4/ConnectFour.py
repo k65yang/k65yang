@@ -22,7 +22,6 @@ class ConnectFour:
         result = []
         i = 0
         for col in self.board:
-            print(col)
             if ' ' in col:
                 result.append(i)
             i += 1
@@ -53,6 +52,11 @@ class ConnectFour:
                                 return True
         return False
 
+def playGame():
+    c = ConnectFour()
+    player = HumanPlayerR()
+    while not c.hasWinner:
+        return None
 
 
 if __name__ == "__main__":

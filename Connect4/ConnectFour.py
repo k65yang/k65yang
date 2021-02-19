@@ -1,4 +1,5 @@
 from Players import HumanPlayer
+import tkinter as tk
 
 class ConnectFour:
     def __init__(self) -> None:
@@ -10,9 +11,16 @@ class ConnectFour:
             print("| " + self.board[0][i] + " | " + self.board[1][i] + 
                 " | " + self.board[2][i] + " | " + self.board[3][i] + " | " + 
                 self.board[4][i] + " | " + self.board[5][i] + " | " + self.board[6][i] + " |")
+        print("\n")
 
-    def isValidMove(self, col) -> bool:
+    def getBoard(self) -> None:
+        return self.board
+
+    def isValidColumn(self, col) -> bool:
         return ' ' in self.board[col]
+    
+    def isValidSquare(self, row, col) -> bool:
+        return row == self.board[col].index(' ')
 
     def makeMove(self, col, player) -> None:
         rowAvailable = self.board[col].index(' ')
@@ -32,6 +40,9 @@ class ConnectFour:
             if ' ' in col:
                 return True
         return False
+
+    def setWinner(self, player) -> None:
+        self.current_winner = player.getMarker()
     
     def hasWinner(self) -> bool:
         return False if self.current_winner == None else True
@@ -43,23 +54,61 @@ class ConnectFour:
             for j in range(len(self.board[0])):
                 currentCoor = [i, j]
                 if self.board[i][j] == player.getMarker():
-                    print(currentCoor)
                     for vi, vj in vectors:
                         nextCoor = currentCoor
                         for cycle in range(3):
                             nextCoor = [nextCoor[0] + vi, nextCoor[1] + vj]
-                            print(nextCoor)
-                            if nextCoor[0] > len(self.board) or nextCoor[1] > len(self.board[0]):
+                            if nextCoor[0] > len(self.board[0]) or nextCoor[1] > len(self.board):
                                 break
                             elif self.board[nextCoor[0]][nextCoor[1]] != player.getMarker():
                                 break
-                            print(cycle)
                             if cycle == 2:
                                 self.current_winner = player.getMarker()
                                 return True
         return False
 
-def playGame(game, rPlayer, bPlayer) -> None:
+class BoardGame():
+    def __init__(self, game, rPlayer, bPlayer) -> None:
+        self.game = game
+        self.rPlayer = rPlayer
+        self.bPlayer = bPlayer
+        self.activePlayer = self.rPlayer
+        self.stop = False
+
+        self.window = tk.Tk()
+        self.window.title("Connect Four")
+        self.window.geometry("400x300")
+
+        board = self.game.getBoard()
+        for c in range(len(board)):
+            for r in range(len(board[0])):
+                l = tk.Label(self.window, text = "test", bg = "grey", height=2, width=5, bd = 1, relief="solid")
+                l.grid(row = r, column = c)
+                l.bind("<Button-1>", lambda e, r=-(r-len(board[0])+1), c=c: self.onClick(r,c,e))
+
+        self.textLabel = tk.Label(self.window, text = "It is " + self.activePlayer.getMarker() + "\'s turn")
+        self.textLabel.grid(row=7, columnspan=7)
+
+        self.window.mainloop()
+
+    def onClick(self, r, c, event) -> None:
+        if (self.game.isValidSquare(r,c) and not self.stop):
+            colour = "red" if self.activePlayer.getMarker() == "R" else "blue"
+            event.widget.config(bg = colour)
+            self.game.makeMove(c, self.activePlayer)
+            if self.game.wonGame(self.activePlayer):
+                self.game.setWinner(self.activePlayer)
+                self.textLabel.configure(text = "Player " + self.activePlayer.getMarker() + " won!")
+                self.stop = True
+            else:
+                self.activePlayer = self.rPlayer if self.activePlayer.getMarker() == "B" else self.bPlayer
+                self.textLabel.configure(text = "It is " + self.activePlayer.getMarker() + "\'s turn")
+        
+
+    
+
+
+def playGameTerminal(game, rPlayer, bPlayer) -> None:
     game.printBoard()
     activePlayer = rPlayer
 
@@ -67,7 +116,10 @@ def playGame(game, rPlayer, bPlayer) -> None:
         move = activePlayer.getMove(game)
         game.makeMove(move, activePlayer)
         game.printBoard()
-        activePlayer = rPlayer if activePlayer.getMarker() == "B" else bPlayer
+        if game.wonGame(activePlayer):
+            game.setWinner(activePlayer)
+        else:
+            activePlayer = rPlayer if activePlayer.getMarker() == "B" else bPlayer
     
     if game.hasWinner:
         print(activePlayer.getMarker() + " wins!")
@@ -79,5 +131,5 @@ if __name__ == "__main__":
     c = ConnectFour()
     r = HumanPlayer("R")
     b = HumanPlayer("B")
-    print(c.availableMoves())
-    playGame(c, r, b)
+    #playGameTerminal(c, r, b)
+    gui = BoardGame(c, r, b)
